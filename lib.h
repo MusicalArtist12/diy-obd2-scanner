@@ -3,23 +3,7 @@
 // https://en.wikipedia.org/wiki/Unified_Diagnostic_Services
 
 
-// for testing
-#ifndef CAN_H_
-#define CAN_H_
-
-typedef uint32_t __u32;
-typedef uint8_t __u8;
-typedef __u32 canid_t;
-
-#define CAN_MAX_DLEN 8
-
-struct can_frame {
-               canid_t can_id;  /* 32 bit CAN_ID + EFF/RTR/ERR flags */
-               __u8    can_dlc; /* frame payload length in byte (0 .. CAN_MAX_DLEN) */
-    alignas(8) __u8    data[CAN_MAX_DLEN];
-};
-
-#endif
+#include "can.h"
 
 #ifndef OBDII_LIB_H
 #define OBDII_LIB_H
@@ -37,9 +21,12 @@ enum OBDII_SERVICE {
     PERM_DTC = 0x0A
 };
 
+// UL == unsigned 32 bit number reqired
+// basically force the constants to be unsigned
+
 const __u8 SAE_OBDII_DLC = 0x08;
-const __u32 SAE_OBDII_PID_QUERY = 0x07DF;
-const __u32 SAE_OBDII_PID_RES = 0x7E8;
+const canid_t SAE_OBDII_PID_QUERY = 0x07DFUL;
+const canid_t SAE_OBDII_PID_RES = 0x07E8UL;
 
 // util function
 void make_frame(struct can_frame *frame, canid_t id, __u8 dlc, __u8* data, size_t size) {
