@@ -8,7 +8,7 @@ struct can_frame recieveMsg;
 
 void setup() {
 
-    byte data[3] = { 0x01, OBDII_SERVICE::STORED_DTC, 0x00 };
+    byte data[2] = { 0x01, OBDII_SERVICE::STORED_DTC };
 
     make_frame(&requestDTC, SAE_OBDII_PID_QUERY, SAE_OBDII_DLC, data, sizeof data);
 
@@ -16,14 +16,16 @@ void setup() {
 
     mcp2515.reset();
     mcp2515.setBitrate(CAN_500KBPS);
-    mcp2515.setNormalMode();
 
     Serial.println("------- CAN Read ----------");
     Serial.println("ID  | DLC | DATA");
 
-
-    mcp2515.setFilterMask(MCP2515::MASK0, false, 0x7FF); // must match all filter
+    mcp2515.setConfigMode();
+    mcp2515.setFilterMask(MCP2515::MASK0, false, 0x07FF);
     mcp2515.setFilter(MCP2515::RXF0, false, SAE_OBDII_PID_RES);
+
+
+    mcp2515.setNormalMode();
 
 }
 
@@ -34,7 +36,6 @@ void loop() {
 
     int out = mcp2515.readMessage(&recieveMsg);
 
-    // data[8] = [num_data_bytes, service + 0x40, PID, ...value]
     // num_data_bytes is the count filled in data[1:8]. min = 3, max = 6
     if (out == MCP2515::ERROR_OK) {
         Serial.print(recieveMsg.can_id, HEX); // print ID
@@ -49,4 +50,5 @@ void loop() {
 
         Serial.println();
     }
+
 }

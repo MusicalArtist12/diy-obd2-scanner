@@ -38,8 +38,8 @@ enum OBDII_SERVICE {
 };
 
 const __u8 SAE_OBDII_DLC = 0x08;
-const __u32 SAE_OBDII_PID_QUERY = 0x7df;
-const __u32 SAE_OBDII_PID_RES = 0x7e8;
+const __u32 SAE_OBDII_PID_QUERY = 0x07DF;
+const __u32 SAE_OBDII_PID_RES = 0x7E8;
 
 // util function
 void make_frame(struct can_frame *frame, canid_t id, __u8 dlc, __u8* data, size_t size) {
