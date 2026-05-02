@@ -1,15 +1,10 @@
 #include "mcp2515.h"
 #include "lib.h"
 
-MCP2515 mcp2515;
+MCP2515 mcp2515(10);
 
 struct can_frame requestDTC;
 
-volatile bool interrupt = false;
-
-void irqHandler() {
-    interrupt = true;
-}
 
 void setup() {
 
@@ -19,9 +14,9 @@ void setup() {
 
     Serial.begin(115200);
 
-    mcp2515 = MCP2515(10); // CS pin == 10
+    // mcp2515 = MCP2515(10); // CS pin == 10
     mcp2515.reset();
-    mcp2515.setBitrate(CAN_500KBPS, MCP_16MHZ);
+    mcp2515.setBitrate(CAN_500KBPS);
 
 
     mcp2515.setConfigMode();
@@ -34,14 +29,18 @@ void setup() {
     mcp2515.setFilter(MCP2515::RXF3, false, SAE_OBDII_PID_RES);
     mcp2515.setFilter(MCP2515::RXF4, false, SAE_OBDII_PID_RES);
     mcp2515.setFilter(MCP2515::RXF5, false, SAE_OBDII_PID_RES);
+    mcp2515.setFilter(MCP2515::RXF5, false, SAE_OBDII_PID_RES);
+
 
     mcp2515.setNormalMode();
     mcp2515.sendMessage(&requestDTC);
 
-    attachInterrupt(digitalPinToInterrupt(9), irqHandler, FALLING);
+    // attachInterrupt(digitalPinToInterrupt(9), irqHandler, FALLING);
 
     Serial.println("------- CAN Read ----------");
     Serial.println("ID  | DLC | DATA");
+
+    //sei();
 
 }
 
@@ -60,26 +59,13 @@ void printFrame(const struct can_frame *frame) {
 }
 
 void loop() {
-    if (interrupt) {
-        interrupt = false;
+    struct can_frame recieveMsg;
 
-        uint8_t irq = mcp2515.getInterrupts();
-
-        struct can_frame recieveMsg;
-
-
-        // mask0 and rxf0-1
-        if (irq & MCP2515::CANINTF_RX0IF) {
-            if (mcp2515.readMessage(MCP2515::RXB0, &recieveMsg) == MCP2515::ERROR_OK) {
-                printFrame(&recieveMsg);
-            }
-        }
-
-        // mask1 and rxf2-5
-        if (irq & MCP2515::CANINTF_RX1IF) {
-            if (mcp2515.readMessage(MCP2515::RXB1, &recieveMsg) == MCP2515::ERROR_OK) {
-                printFrame(&recieveMsg);
-            }
-        }
+    // this will continuously read the last recieved message...
+    if (mcp2515.readMessage(MCP2515::RXB0, &recieveMsg) == MCP2515::ERROR_OK) {
+        printFrame(&recieveMsg);
+    }
+    if (mcp2515.readMessage(MCP2515::RXB1, &recieveMsg) == MCP2515::ERROR_OK) {
+        printFrame(&recieveMsg);
     }
 }

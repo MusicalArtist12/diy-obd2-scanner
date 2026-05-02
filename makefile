@@ -12,3 +12,6 @@ monitor:
 
 check_preprocess:
 	arduino-cli compile --library ./arduino-mcp2515/ -e -u -b ${BOARD_FQDN} -p ${PORT} --config-dir ./data --preprocess
+
+a.out: test.cpp lib.h
+	clang test.cpp -I ./arduino-mcp2515

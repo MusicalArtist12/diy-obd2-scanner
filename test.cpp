@@ -15,14 +15,28 @@ int main() {
 
     make_frame(&frame, 0x07e8, 8, data, sizeof data);
 
-    struct dtc_code_frame res = interpret_dtc_frame(&frame);
+    union can_header* header = (can_header *)data;
 
-    if (res.count >= 1) {
-        printf("%s\n", res.code_0);
+    union dtc_code_data* code_0;
+    union dtc_code_data* code_1;
+    if (header->single.type == 0) {
+        code_0 = (dtc_code_data *)&header->single.data[1];
+        code_1 = (dtc_code_data *)&header->single.data[3];
     }
-    if (res.count >= 2) {
-        printf("%s\n", res.code_1);
+    else if (header->single.type == 1) {
+        code_0 = (dtc_code_data *)&header->first.data[1];
+        code_1 = (dtc_code_data *)&header->first.data[3];
     }
+    else if (header->single.type == 2) {
+        code_0 = (dtc_code_data *)&header->next.data[1];
+        code_1 = (dtc_code_data *)&header->next.data[3];
+    }
+
+    const char* codes = "PCBU";
+
+    printf("code: %c%d%d%d%d\n", codes[code_0->data.cat], code_0->data.num, code_0->data.d1, code_0->data.d2, code_0->data.d3);
+    printf("code: %c%d%d%d%d\n", codes[code_1->data.cat], code_1->data.num, code_1->data.d1, code_1->data.d2, code_1->data.d3);
+
 }
 
 #endif
