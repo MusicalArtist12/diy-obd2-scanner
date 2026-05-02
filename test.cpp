@@ -19,15 +19,15 @@ int main() {
 
     union dtc_code_data* code_0;
     union dtc_code_data* code_1;
-    if (header->single.type == 0) {
+    if (header->single.type == SINGLE) {
         code_0 = (dtc_code_data *)&header->single.data[1];
         code_1 = (dtc_code_data *)&header->single.data[3];
     }
-    else if (header->single.type == 1) {
+    else if (header->single.type == FIRST) {
         code_0 = (dtc_code_data *)&header->first.data[1];
         code_1 = (dtc_code_data *)&header->first.data[3];
     }
-    else if (header->single.type == 2) {
+    else if (header->single.type == NEXT) {
         code_0 = (dtc_code_data *)&header->next.data[1];
         code_1 = (dtc_code_data *)&header->next.data[3];
     }

@@ -223,6 +223,12 @@ union dtc_code_data {
 
 // basically, makes it easy to determine if single or multi frame message
 
+enum CAN_HEADER_TYPE: uint8_t {
+    SINGLE,
+    FIRST,
+    NEXT
+};
+
 union can_header {
     __u8 bytes[8];
     struct {
