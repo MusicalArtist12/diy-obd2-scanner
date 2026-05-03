@@ -4,14 +4,15 @@
 MCP2515 mcp2515(10);
 
 struct can_frame requestDTC;
-
+struct can_frame send_one;
 
 void setup() {
 
-    byte data[2] = { 0x01, OBDII_SERVICE::STORED_DTC };
+    byte data[3] = { 0x02, OBDII_SERVICE::VEHICLE_INFO, SERVICE_9_PID::VIN };
+    byte control_dat[3] = { 0x30, 0x00, 0x0A };
 
-    make_frame(&requestDTC, SAE_OBDII_PID_QUERY, SAE_OBDII_DLC, data, sizeof data);
-
+    make_frame(&requestDTC, 0x7e0, SAE_OBDII_DLC, data, sizeof data);
+    make_frame(&send_one, 0x7E0, SAE_OBDII_DLC, control_dat, sizeof control_dat);
     Serial.begin(115200);
 
     // mcp2515 = MCP2515(10); // CS pin == 10
@@ -51,7 +52,7 @@ void printFrame(const struct can_frame *frame) {
     Serial.print(" | ");
 
     for (int i = 0; i < frame->can_dlc; i++)  {  // print the data
-        Serial.print(frame->data[i], HEX);
+        Serial.print(char(frame->data[i]));
         Serial.print(" ");
     }
 
@@ -59,13 +60,19 @@ void printFrame(const struct can_frame *frame) {
 }
 
 void loop() {
+
     struct can_frame recieveMsg;
 
     // this will continuously read the last recieved message...
-    if (mcp2515.readMessage(MCP2515::RXB0, &recieveMsg) == MCP2515::ERROR_OK) {
+    if (mcp2515.readMessage(&recieveMsg) == MCP2515::ERROR_OK) {
+
+        if ((recieveMsg.data[0] & 0xF0) == 0x10) {
+            // delay(100); // Give the ECU a tiny bit of breathing room
+            mcp2515.sendMessage(&send_one);
+            // Serial.println("Flow Control Sent!");
+        }
+
         printFrame(&recieveMsg);
     }
-    if (mcp2515.readMessage(MCP2515::RXB1, &recieveMsg) == MCP2515::ERROR_OK) {
-        printFrame(&recieveMsg);
-    }
+
 }
