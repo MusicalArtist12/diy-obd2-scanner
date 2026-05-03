@@ -8,7 +8,7 @@ struct can_frame send_one;
 
 void setup() {
 
-    byte data[3] = { 0x02, OBDII_SERVICE::VEHICLE_INFO, SERVICE_9_PID::VIN };
+    byte data[3] = { 0x01, OBDII_SERVICE::CLEAR_DTC };
     byte control_dat[3] = { 0x30, 0x00, 0x0A };
 
     make_frame(&requestDTC, 0x7e0, SAE_OBDII_DLC, data, sizeof data);
@@ -52,7 +52,8 @@ void printFrame(const struct can_frame *frame) {
     Serial.print(" | ");
 
     for (int i = 0; i < frame->can_dlc; i++)  {  // print the data
-        Serial.print(char(frame->data[i]));
+        Serial.print("0x");
+        Serial.print(frame->data[i], HEX);
         Serial.print(" ");
     }
 
