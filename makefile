@@ -1,17 +1,10 @@
 BOARD_FQDN=arduino:avr:uno
-PORT=/dev/ttyUSB0
+PORT=/dev/ttyUSB1
 
-default: compile
+ROOT_DIR := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 
-compile:
-	arduino-cli compile --library ./arduino-mcp2515/ -e -u -b ${BOARD_FQDN} -p ${PORT} --config-dir ./data -v
 
-.PHONY: monitor
-monitor:
-	arduino-cli monitor  --config-dir ./data -p ${PORT} --config 115200
+LIBS=${ROOT_DIR}arduino-mcp2515/,${ROOT_DIR}LCD1602/,${ROOT_DIR}include
+CONFIG_DIR=${ROOT_DIR}data
 
-check_preprocess:
-	arduino-cli compile --library ./arduino-mcp2515/ -e -u -b ${BOARD_FQDN} -p ${PORT} --config-dir ./data --preprocess
-
-a.out: test.cpp lib.h
-	clang test.cpp -I ./arduino-mcp2515
+EXTRA_ARGS=--config-dir ${CONFIG_DIR} -b ${BOARD_FQDN} -p ${PORT} --library ${LIBS}

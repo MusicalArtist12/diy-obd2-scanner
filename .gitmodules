@@ -1,3 +1,6 @@
 [submodule "arduino-mcp2515"]
 	path = arduino-mcp2515
 	url = https://github.com/MusicalArtist12/arduino-mcp2515.git
+[submodule "LCD1602"]
+	path = LCD1602
+	url = https://github.com/krovma/LCD1602.git
