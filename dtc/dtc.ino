@@ -1,4 +1,6 @@
-
+// simple setup to read dtc codes and clear them using a button
+// no laptop required!
+// may or may not work perfectly
 
 #include "mcp2515.h"
 #include "lib.h"
@@ -78,12 +80,18 @@ void printDTC(struct can_frame* frame) {
 
     const char* codes = "PCBU";
 
-    char code_0_ascii[] = {codes[code_0->data.cat], code_0->data.num + '0', code_0->data.d1 + '0', code_0->data.d2 + '0', code_0->data.d3 + '0'};
-    char code_1_ascii[] = {codes[code_1->data.cat], code_1->data.num + '0', code_1->data.d1 + '0', code_1->data.d2 + '0', code_1->data.d3 + '0'};
+    lcd.writeData(codes[code_0->data.cat]);
+    lcd.writeData(code_0->data.num + '0');
+    lcd.writeData(code_0->data.d1 + '0');
+    lcd.writeData(code_0->data.d2 + '0');
+    lcd.writeData(code_0->data.d3 + '0');
 
+    lcd.writeData(codes[code_1->data.cat]);
+    lcd.writeData(code_1->data.num + '0');
+    lcd.writeData(code_1->data.d1 + '0');
+    lcd.writeData(code_1->data.d2 + '0');
+    lcd.writeData(code_1->data.d3 + '0');
 
-    lcd.writeData(code_0_ascii);
-    lcd.writeData(code_1_ascii);
 
 }
 
