@@ -59,39 +59,76 @@ void setup() {
 
 }
 
-void printDTC(struct can_frame* frame) {
-    union can_header* header = (can_header *)frame->data;
 
-    union dtc_code_data* code_0;
-    union dtc_code_data* code_1;
-
-    if (header->single.type == SINGLE) {
-        code_0 = (dtc_code_data *)&header->single.data[1];
-        code_1 = (dtc_code_data *)&header->single.data[3];
-    }
-    else if (header->single.type == FIRST) {
-        code_0 = (dtc_code_data *)&header->first.data[1];
-        code_1 = (dtc_code_data *)&header->first.data[3];
-    }
-    else if (header->single.type == NEXT) {
-        code_0 = (dtc_code_data *)&header->next.data[1];
-        code_1 = (dtc_code_data *)&header->next.data[3];
-    }
-
+void printCode(union dtc_code_data* code) {
+    static byte count = 0;
     const char* codes = "PCBU";
 
-    lcd.writeData(codes[code_0->data.cat]);
-    lcd.writeData(code_0->data.num + '0');
-    lcd.writeData(code_0->data.d1 + '0');
-    lcd.writeData(code_0->data.d2 + '0');
-    lcd.writeData(code_0->data.d3 + '0');
+    if (count == 3) {
+        lcd.setDataAddr(LCD_Line2Start);
+    }
 
-    lcd.writeData(codes[code_1->data.cat]);
-    lcd.writeData(code_1->data.num + '0');
-    lcd.writeData(code_1->data.d1 + '0');
-    lcd.writeData(code_1->data.d2 + '0');
-    lcd.writeData(code_1->data.d3 + '0');
+    lcd.writeData(codes[code->data.cat]);
+    lcd.writeData(code->data.num + '0');
+    lcd.writeData(code->data.d1 + '0');
+    lcd.writeData(code->data.d2 + '0');
+    lcd.writeData(code->data.d3 + '0');
 
+    count++;
+}
+
+
+void handleMessageSingle(union can_header* header) {
+    printCode((union dtc_code_data*)&header->single.data[1]);
+    if (header->single.len > 3) {
+        printCode((union dtc_code_data*)&header->single.data[3]);
+    }
+}
+
+void handleMultiMessageFrame(union can_header* header) {
+    static uint16_t data_len = 0;
+    byte this_frames_len = 0;
+
+    if (header->single.type == FIRST) {
+        data_len = header->first.len + (header->first.len_upper << 8);
+
+        mcp2515.sendMessage(&respond);
+
+        printCode((union dtc_code_data*)&header->first.data[1]);
+        printCode((union dtc_code_data*)&header->first.data[3]);
+
+        data_len -= 6;
+    }
+    else if (header->single.type == NEXT) {
+
+        if (data_len > 7) {
+            mcp2515.sendMessage(&respond);
+            data_len -= 7;
+            this_frames_len = 7;
+        }
+        else {
+            this_frames_len = data_len;
+        }
+
+        printCode((union dtc_code_data*)&header->next.data[1]);
+        if (this_frames_len > 3) {
+            printCode((union dtc_code_data*)&header->next.data[3]);
+        }
+        if (this_frames_len > 5) {
+            printCode((union dtc_code_data*)&header->next.data[5]);
+        }
+    }
+}
+
+void handleMessage(struct can_frame* frame) {
+    union can_header* header = (can_header *)frame->data;
+
+    if (header->single.type == SINGLE) {
+        handleMessageSingle(header);
+    }
+    else {
+        handleMultiMessageFrame(header);
+    }
 
 }
 
@@ -103,14 +140,7 @@ void loop() {
     struct can_frame recieveMsg;
 
     if (mcp2515.readMessage(&recieveMsg) == MCP2515::ERROR_OK) {
-
-        if ((recieveMsg.data[0] & 0xF0) == 0x10) {
-            mcp2515.sendMessage(&respond);
-        }
-
-        //printFrameSerial(&recieveMsg);
-
-        printDTC(&recieveMsg);
+        handleMessage(&recieveMsg);
     }
 
     if (digitalRead(A0) == HIGH) {

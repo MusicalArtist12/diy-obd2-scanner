@@ -1,5 +1,5 @@
 BOARD_FQDN=arduino:avr:uno
-PORT=/dev/ttyUSB2
+PORT=/dev/ttyUSB0
 
 ROOT_DIR := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 
